@@ -2,7 +2,6 @@ package main
 
 import (
 	"./lib/socket"
-	"fmt"
 	"github.com/gorilla/websocket"
 	"net/http"
 	"time"
@@ -29,7 +28,7 @@ func wsHandler(w http.ResponseWriter, r *http.Request) {
 	if wsConn, err = upgrader.Upgrade(w, r, nil); err != nil {
 		return
 	}
-	fmt.Println(r.RequestURI)
+	//fmt.Println(r)
 	if conn, err = socket.InitConnection(wsConn); err != nil {
 		goto ERR
 	}
@@ -39,6 +38,7 @@ func wsHandler(w http.ResponseWriter, r *http.Request) {
 			err error
 		)
 		for {
+			// 5s发一次心跳包，保持连接壮体啊
 			if err = conn.WriteMessage([]byte("heartbeat")); err != nil {
 				return
 			}

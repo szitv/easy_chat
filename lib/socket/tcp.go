@@ -1,7 +1,6 @@
 package socket
 
 import (
-	"fmt"
 	"github.com/gorilla/websocket"
 	"sync"
 )
@@ -39,12 +38,12 @@ func (conn *Connection) ReadMessage() (data []byte, err error) {
 	case <-conn.closeChan:
 		// fmt.Println("connection is closed")
 	}
-	fmt.Println(conn.wsConn.RemoteAddr().String())
+	//fmt.Println(conn.wsConn.RemoteAddr().String())
 	return
 }
 
 func (conn *Connection) WriteMessage(data []byte) (err error) {
-	fmt.Println(string(data[:]))
+	//fmt.Println(string(data[:]))
 	select {
 	case conn.outChan <- data:
 	case <-conn.closeChan:
