@@ -1,70 +1,67 @@
 package main
 
 import (
+	"./lib/socket"
 	"fmt"
-	"os"
-	"bufio"
-	"strings"
-	"./lib/model"
+	"github.com/gorilla/websocket"
+	"net/http"
+	"time"
 )
 
-type Config struct {
-	host string
-	port string
-	database string
-	username string
-	password string
-}
-
-func main () {
-	// config := LoadConfig()
-	model.Init()
-}
-
-// 读取本地配置文件
-func LoadConfig() Config {
-	c := &Config{}
-	
-  	//创建一个结构体变量的反射
-  	f,err := os.Open("./config/app.config")
-	if err != nil {
-		fmt.Printf("%v", err)
+var (
+	upgrader = websocket.Upgrader{
+		//允许跨域
+		CheckOrigin: func(r *http.Request) bool {
+			return true
+		},
 	}
-	defer func() {
-		if err = f.Close(); err != nil {
-			fmt.Printf("%v", err)
+)
+
+func wsHandler(w http.ResponseWriter, r *http.Request) {
+	var (
+		wsConn *websocket.Conn
+		err    error
+		conn   *socket.Connection
+		data   []byte
+	)
+
+	//Upgrade:websocket
+	if wsConn, err = upgrader.Upgrade(w, r, nil); err != nil {
+		return
+	}
+	fmt.Println(r.RequestURI)
+	if conn, err = socket.InitConnection(wsConn); err != nil {
+		goto ERR
+	}
+
+	go func() {
+		var (
+			err error
+		)
+		for {
+			if err = conn.WriteMessage([]byte("heartbeat")); err != nil {
+				return
+			}
+			time.Sleep(5 * time.Second)
 		}
 	}()
-	//我们要逐行读取文件内容
-	s := bufio.NewScanner(f)
-	for s.Scan() {
-	//以=分割,前面为key,后面为value
-		var str = s.Text()
-		var index = strings.Index(str, "=")
-		var key = strings.Replace(str[0:index], " ", "", -1)
-		var value = strings.Replace(str[index + 1:], " ", "", -1)
-		switch key {
-			case "host":
-				c.host = value
-				break;
-			case "port":
-				c.port = value
-				break;
-			case "username":
-				c.username = value
-				break;
-			case "password":
-				c.password = value
-				break;
-			case "database":
-				c.database = value
-				break;
-			
+
+	for {
+		if data, err = conn.ReadMessage(); err != nil {
+			goto ERR
 		}
-		fmt.Println("key===")
-		fmt.Printf("%s\n", strings.Replace(key, " ", "", -1))
-		fmt.Println("value===")
-		fmt.Printf("%s\n", strings.Replace(value, " ", "", -1))
+		if err = conn.WriteMessage(data); err != nil {
+			goto ERR
+		}
 	}
-	return *c
+
+ERR:
+	//关闭连接
+	conn.Close()
+}
+
+func main() {
+	//http:localhost:7777/ws
+	http.HandleFunc("/ws", wsHandler)
+	http.ListenAndServe("0.0.0.0:7777", nil)
 }
