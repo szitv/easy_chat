@@ -4,7 +4,6 @@ import (
 	"./lib/socket"
 	"github.com/gorilla/websocket"
 	"net/http"
-	"time"
 )
 
 var (
@@ -33,18 +32,18 @@ func wsHandler(w http.ResponseWriter, r *http.Request) {
 		goto ERR
 	}
 
-	go func() {
-		var (
-			err error
-		)
-		for {
-			// 5s发一次心跳包，保持连接壮体啊
-			if err = conn.WriteMessage([]byte("heartbeat")); err != nil {
-				return
-			}
-			time.Sleep(5 * time.Second)
-		}
-	}()
+	//go func() {
+	//	var (
+	//		err error
+	//	)
+	//	for {
+	//		// 5s发一次心跳包，保持连接状态
+	//		if err = conn.WriteMessage([]byte("heartbeat")); err != nil {
+	//			return
+	//		}
+	//		time.Sleep(5 * time.Second)
+	//	}
+	//}()
 
 	for {
 		if data, err = conn.ReadMessage(); err != nil {
