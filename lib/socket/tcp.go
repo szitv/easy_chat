@@ -27,7 +27,7 @@ func InitConnection(wsConn *websocket.Conn) (conn *Connection, err error) {
 	go conn.readLoop()
 
 	//启动写协程
-	go conn.writeLoop()
+	//go conn.writeLoop()
 
 	return
 }
@@ -102,7 +102,6 @@ func (conn *Connection) writeLoop() {
 		if err = conn.wsConn.WriteMessage(websocket.TextMessage, data); err != nil {
 			goto ERR
 		}
-		// conn.outChan <- data
 	}
 ERR:
 	conn.Close()

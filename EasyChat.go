@@ -61,6 +61,6 @@ ERR:
 
 func main() {
 	//http:localhost:7777/ws
-	http.HandleFunc("/ws", wsHandler)
-	http.ListenAndServe("0.0.0.0:7777", nil)
+	http.HandleFunc("/", wsHandler)
+	http.ListenAndServe("0.0.0.0:666", nil)
 }
