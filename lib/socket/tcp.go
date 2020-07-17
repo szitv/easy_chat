@@ -3,7 +3,6 @@ package socket
 import (
 	"github.com/gorilla/websocket"
 	"sync"
-	"fmt"
 )
 
 type Connection struct {
@@ -27,7 +26,7 @@ func InitConnection(wsConn *websocket.Conn) (conn *Connection, err error) {
 	go conn.readLoop()
 
 	//启动写协程
-	//go conn.writeLoop()
+	go conn.writeLoop()
 
 	return
 }
@@ -37,7 +36,7 @@ func (conn *Connection) ReadMessage() (data []byte, err error) {
 	select {
 	case data = <-conn.inChan:
 	case <-conn.closeChan:
-		fmt.Printf("%t\n", conn.isClosed)
+		//fmt.Printf("%t\n", conn.isClosed)
 		//fmt.Println("connection is closed")
 	}
 	//fmt.Println(conn.wsConn.RemoteAddr().String())
@@ -49,7 +48,7 @@ func (conn *Connection) WriteMessage(data []byte) (err error) {
 	select {
 	case conn.outChan <- data:
 	case <-conn.closeChan:
-		fmt.Printf("%t\n", conn.isClosed)
+		//fmt.Printf("%t\n", conn.isClosed)
 	}
 	return
 }
