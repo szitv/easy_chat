@@ -1,7 +1,7 @@
 package socket
 
 import (
-	"fmt"
+	"errors"
 	"github.com/gorilla/websocket"
 	"sync"
 )
@@ -37,21 +37,18 @@ func (conn *Connection) ReadMessage() (data []byte, err error) {
 	select {
 	case data = <-conn.inChan:
 	case <-conn.closeChan:
-		fmt.Printf("%t\n", conn.isClosed)
-		//fmt.Println("connection is closed")
-		return
+		err = errors.New("connection is closed")
+		break
 	}
-	//fmt.Println(conn.wsConn.RemoteAddr().String())
 	return
 }
 // 写信息（写入出通道）
 func (conn *Connection) WriteMessage(data []byte) (err error) {
-	//fmt.Println(string(data[:]))
 	select {
 	case conn.outChan <- data:
 	case <-conn.closeChan:
-		fmt.Printf("%t\n", conn.isClosed)
-		return
+		err = errors.New("connection is closed")
+		break
 	}
 	return
 }
@@ -81,7 +78,6 @@ func (conn *Connection) readLoop() {
 		select {
 		case conn.inChan <- data:
 		case <-conn.closeChan:
-			//closeChan关闭的时候，会进入此分支
 			goto ERR
 		}
 	}
@@ -99,7 +95,6 @@ func (conn *Connection) writeLoop() {
 		case data = <-conn.outChan:
 		case <-conn.closeChan:
 			goto ERR
-
 		}
 		if err = conn.wsConn.WriteMessage(websocket.TextMessage, data); err != nil {
 			goto ERR
