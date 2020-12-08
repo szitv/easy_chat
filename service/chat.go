@@ -1,7 +1,7 @@
-package main
+package service
 
 import (
-	"./lib/socket"
+	"../lib/socket"
 	"github.com/gorilla/websocket"
 	"net/http"
 )
@@ -31,7 +31,7 @@ func wsHandler(w http.ResponseWriter, r *http.Request) {
 	if conn, err = socket.InitConnection(wsConn); err != nil {
 		goto ERR
 	}
-
+	// 服务端保持长连接，一般由前端发送消息保持长连接亦可
 	//go func() {
 	//	var (
 	//		err error
@@ -59,8 +59,7 @@ ERR:
 	conn.Close()
 }
 
-func main() {
-	//http:localhost:7777/ws
-	// http.HandleFunc("/", wsHandler)
-	// http.ListenAndServe("0.0.0.0:7777", nil)
+func InitChat(port string) {
+	http.HandleFunc("/", wsHandler)
+	http.ListenAndServe("0.0.0.0:"+port, nil)
 }
